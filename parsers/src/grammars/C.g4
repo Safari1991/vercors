@@ -36,7 +36,7 @@ package vct.antlr4.generated;
 @lexer::members{
   public final static int COMMENT=BlockComment;
   public final static int LINEDIRECTION=LineDirective;
-}
+} 
 
 primaryExpression
     :   clangIdentifier

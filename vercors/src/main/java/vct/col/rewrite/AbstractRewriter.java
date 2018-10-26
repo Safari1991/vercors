@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+
 
 import hre.ast.MessageOrigin;
 import hre.ast.Origin;
@@ -26,6 +26,8 @@ import vct.col.util.NameScanner;
  * @author Stefan Blom
  */ 
 public class AbstractRewriter extends AbstractVisitor<ASTNode> {
+	
+  private static int counter = 0;	
 
   private static ThreadLocal<AbstractRewriter> tl=new ThreadLocal<AbstractRewriter>();
 
@@ -285,8 +287,55 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
     }
     return res;
   }
+  
+  
   @Override
   public void visit(MethodInvokation e) {
+	  
+	  /*if(e.method.equals("barrier")){
+	   System.out.println("AbstractRewriter-visit(MethodInvokation): "+e.method);
+   	   System.out.println("m.getDefinition(): "+e.getDefinition());
+	   Contract mc=e.getDefinition().getContract();
+	   System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-barrier");
+	   if (mc!=null){
+		   System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-barrier-inside if");
+		   rewrite(mc,currentContractBuilder);
+	   }
+	   Contract c=currentContractBuilder.getContract();
+	   currentContractBuilder=null;
+	   ArrayList<String> invs=new ArrayList<String>();
+	   result=create.barrier("barrier",c,invs,null);
+   	}
+	 else*/
+	  
+	  /*System.out.println("AbstractRewriter-visit(MethodInvokation): "+e.method);
+	  System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-currentContractBuilder: "+currentContractBuilder);
+	  if(e.method.equals("barrier") && currentContractBuilder !=null){ 
+   	   //Contract mc=currentContractBuilder.getContract();
+	   System.out.println("AbstractRewriter-visit(MethodInvokation)-barrier-currentContractBuilder: "+currentContractBuilder);
+	   //if (mc!=null){
+	//	   System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-barrier-inside if");
+	//	   rewrite(mc,currentContractBuilder);
+	  // }
+	   Contract c=currentContractBuilder.getContract();
+	  // if (c!=null){
+		//		   System.out.println("AbstractRewriter-visit(MethodInvokation)-barrier-inside if");
+		//		   rewrite(c,currentContractBuilder);
+		//	   }
+	   //MethodInvokation.setContract("barrier",c);
+	   System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-barrier-currentContractBuilder.getContract(): "+c);
+	   System.out.println("AbstractRewriter-visit-visit(MethodInvokation)-barrier-e.object: "+e.object);
+	   currentContractBuilder=null;
+	   ArrayList<String> invs=new ArrayList<String>();
+	   result = create.barrier("barrier",c,invs,null);
+	   //ParallelBarrier res=create.barrier("barrier",c,invs,null);
+	   //res.set_before(rewrite(e.get_before()));
+	   //res.set_after(rewrite(e.get_after()));
+	   //result=res;
+   	} 
+	  
+	 else {*/
+	
     ASTNode object=rewrite(e.object);
     int N=e.getArity();
     ASTNode args[]=new ASTNode[N];
@@ -297,8 +346,11 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
     res.set_before(rewrite(e.get_before()));
     res.set_after(rewrite(e.get_after()));
     result=res;
+	//}
+	  
   }
-
+  
+  
   @Override
   public void visit(AssignmentStatement s) {
     ASTNode loc = s.location().apply(this);
@@ -339,7 +391,7 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
     //checkPermission(s);
     Debug("rewriting block");
     BlockStatement tmp=currentBlock;
-    currentBlock=new BlockStatement();
+    currentBlock=new BlockStatement(); 
     currentBlock.setOrigin(s.getOrigin());
     int N=s.getLength();
     for (int i=0;i<N;i++){
@@ -376,7 +428,7 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
   
   @Override
   public void visit(DeclarationStatement s) {
-    //checkPermission(s);
+    //checkPermission(s); 
     Type t=s.getType();
     ASTNode tmp=t.apply(this);
     if (tmp instanceof Type){
@@ -464,6 +516,7 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
     if (currentContractBuilder==null) currentContractBuilder=new ContractBuilder();
     DeclarationStatement args[]=rewrite(m.getArgs());
     Contract mc=m.getContract();
+    
     if (mc!=null){
       rewrite(mc,currentContractBuilder);
     }
@@ -486,19 +539,38 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
   @Override
   public void visit(OperatorExpression e) {
     //checkPermission(e);
-    StandardOperator op=e.operator();
-    
+	StandardOperator op=e.operator();
+	if((e.toString().equals("(blockIdx . x) * (blockDim . x) + (threadIdx . x)") ) || (e.toString().equals("(threadIdx . x) + (blockIdx . x) * (blockDim . x)")) || (e.toString().equals("(blockDim . x) * (blockIdx . x) + (threadIdx . x)")) || (e.toString().equals("(threadIdx . x) + (blockDim . x) * (blockIdx . x)"))) {
+		counter+=1;
+		result=plus(mult(create.local_name("opencl_gid"),create.local_name("opencl_gsize")), 
+		          create.local_name("opencl_lid"));
+			
+	}
+	else if((e.toString().equals("(blockIdx . x) * (blockDim . x)") ) || (e.toString().equals("(blockDim . x) * (blockIdx . x)")) || (e.toString().equals("blockDim . x")) || (e.toString().equals("blockIdx . x"))) {
+		 return;
+	}
+	else if(e.toString().equals("threadIdx . x")) {
+		if(counter == 0) {
+			result=plus(mult(create.local_name("opencl_gid"),sub(create.local_name("opencl_gsize"), create.local_name("opencl_gsize"))),
+			       create.local_name("opencl_lid"));			
+		}else {
+			return;		
+		}
+	}
+	else {
+	
     List<ASTNode> args = new LinkedList<ASTNode>();
     for (ASTNode arg : e.argsJava()) {
 			ASTNode aa = arg.apply(this);
       args.add(aa);
     }
-    
     OperatorExpression res = create.expression(op, args);
     //res.setOrigin(e.getOrigin());
     res.set_before(rewrite(e.get_before()));
     res.set_after(rewrite(e.get_after()));
     result=res;
+    }
+	
   }
 
   public void visit(PrimitiveType t){
@@ -619,6 +691,7 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
   
   @Override
   public void visit(ParallelBlock pb){
+	  System.out.println("AbstractRewriter-visit(ParallelBlock pb): "+rewrite(pb.contract()));
     ParallelBlock res=create.parallel_block(
         pb.label(),
         rewrite(pb.contract()),
@@ -631,11 +704,16 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
   
   @Override
   public void visit(ParallelRegion region){
+	  System.out.println("AbstractRewriter-visit(ParallelRegion region): "+rewrite(region.blocksJava()));
     result = create.region(rewrite(region.contract()), rewrite(region.blocksJava()));
   }
   
   @Override
   public void visit(ParallelBarrier pb) {
+	  System.out.println("AbstractRewriter-visit(ParallelBarrier pb)-pb.label(): "+pb.label());
+	  System.out.println("AbstractRewriter-visit(ParallelBarrier pb)-pb.contract(): "+pb.contract());
+	  System.out.println("AbstractRewriter-visit(ParallelBarrier pb)-pb.invs(): "+pb.invs());
+	  System.out.println("AbstractRewriter-visit(ParallelBarrier pb)-pb.body(): "+pb.body());
     result = create.barrier(pb.label(), rewrite(pb.contract()), pb.invs(), rewrite(pb.body()));
   }
 
@@ -696,6 +774,9 @@ public class AbstractRewriter extends AbstractVisitor<ASTNode> {
   public ASTNode plus(ASTNode e1,ASTNode e2){
     return create.expression(StandardOperator.Plus,e1,e2);
   }
+  public ASTNode sub(ASTNode e1,ASTNode e2){ // Added by Mohsen
+	    return create.expression(StandardOperator.Minus,e1,e2);
+	  }
   public ASTNode mult(ASTNode e1,ASTNode e2){
     return create.expression(StandardOperator.Mult,e1,e2);
   }

@@ -96,6 +96,8 @@ public class SilverTypeMap<T> implements TypeMapping<T> {
       case ZFraction:
       case Fraction:
         return create.Perm();
+      case Pointer:              //Added by Mohsen
+    	    return create.Ref();          
       case Sequence:
         return create.List(map(t.firstarg()));
       case Set:

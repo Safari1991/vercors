@@ -297,7 +297,7 @@ public class CMLtoCOL extends ANTLRtoCOL implements CMLVisitor<ASTNode> {
           type=create.__short(type);
           break;
         case "signed":
-          type=create.__signed(type);
+          type=create.__signed(type);   
           break;
         case "unsigned":
           type=create.__unsigned(type);
@@ -314,9 +314,9 @@ public class CMLtoCOL extends ANTLRtoCOL implements CMLVisitor<ASTNode> {
         switch(modifier){
         case "const":
           type=create.__const(type);
-          break;
+          break; 
         case "short":
-          type=create.__short(type);
+          type=create.__short(type); 
           break;
         case "signed":
           type=create.__signed(type);
@@ -328,13 +328,14 @@ public class CMLtoCOL extends ANTLRtoCOL implements CMLVisitor<ASTNode> {
           type=create.__long(type);
           break;
         case "__kernel":
+        case "__global__": // Added by Mohsen
           type=create.__kernel(type);
           break;
         case "__global":
           type=create.__global(type);
           break;
-        case "__local":
-          type=create.__local(type);
+        case "__local": 
+          type=create.__local(type); 
           break;
         default:
           hre.lang.System.Abort("unknown type modifier: %s",modifier);
@@ -780,8 +781,8 @@ public class CMLtoCOL extends ANTLRtoCOL implements CMLVisitor<ASTNode> {
     return visitPrimaryExpression((ParserRuleContext)ctx);
   }
 
-  public ASTNode visitPrimaryExpression(ParserRuleContext ctx) {
-    ASTNode res=visit(ctx);
+  public ASTNode visitPrimaryExpression(ParserRuleContext ctx) {	  
+    ASTNode res=visit(ctx); 
     if (res!=null) return res;
     if (match(ctx,null,"(",null,")")){
       String name=getIdentifier(ctx,0);
@@ -790,7 +791,7 @@ public class CMLtoCOL extends ANTLRtoCOL implements CMLVisitor<ASTNode> {
     }
     if (match(ctx,null,"(",")")){
       String name=getIdentifier(ctx,0);
-      return create.invokation(null,null,name,new ASTNode[0]);
+    	  return create.invokation(null,null,name,new ASTNode[0]);
     }
     ParseTree t=ctx.getChild(0);
     if (t instanceof TerminalNode){

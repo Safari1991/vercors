@@ -266,7 +266,7 @@ public class Main
         cnt++;
       }
       System.err.printf("Parsed %d file(s) in: %dms%n",cnt,System.currentTimeMillis() - startTime);
-  
+ 
       if (boogie.get() || sequential_spec.get()) {
         program.setSpecificationFormat(SpecificationFormat.Sequential);
       }

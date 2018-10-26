@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import vct.col.ast.*;
 import vct.col.ast.ASTSpecial.Kind;
-import vct.col.ast.Binder;
 import vct.col.util.ASTUtils;
 import vct.col.util.NameScanner;
 import vct.col.util.OriginWrapper;
@@ -51,6 +50,7 @@ public class ParallelBlockEncoder extends AbstractRewriter {
  
   @Override
   public void visit(ParallelBlock pb){
+	  System.out.println("ParallelBlockEncoder-visit(ParallelBlock pb): "+pb);
     Contract c=pb.contract();
     if (c==null){
       Fail("parallel block without a contract");
@@ -140,38 +140,90 @@ public class ParallelBlockEncoder extends AbstractRewriter {
   
   @Override
   public void visit(ParallelBarrier pb){
+	  System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-blocks: "+blocks);  
+	  System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-pb: "+pb);
     if (blocks.empty()){
       Fail("barrier outside of parallel block");
     }
     BlockStatement res = rewrite(pb.body());
     ContractBuilder main_cb=new ContractBuilder();
     ContractBuilder check_cb=new ContractBuilder();
-    Hashtable<String,Type> main_vars=free_vars(pb);
-    Hashtable<String,Type> check_vars=new Hashtable<String, Type>(main_vars);
+    Hashtable<String,Type> main_vars=free_vars(pb); 
+	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-free_vars(pb): "+free_vars(pb));
+    Hashtable<String,Type> check_vars=new Hashtable<String, Type>(main_vars); 
+	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-main_vars: "+main_vars+" and check_vars: "+check_vars);
     ParallelBlock blk=null;
     for(ParallelBlock b:blocks){
+    	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-b: "+b);
+    	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-b.label(): "+b.label());
+    	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-pb.label(): "+pb.label());
       if (b.label().equals(pb.label())) {
         blk=b;
       }
     }
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-blk: "+blk);
     if(blk==null){
       Fail("Block %s not found on block stack", pb.label());
     }
     ArrayList<ASTNode> guard_list=new ArrayList<ASTNode>();
     ArrayList<DeclarationStatement> guard_decls=new ArrayList<DeclarationStatement>();
-    
     for (DeclarationStatement decl : blk.itersJava()) {
+      	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-blk.itersJava(): "+blk.itersJava());
+      	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.initJava(): "+decl.initJava());
+      	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.initJava().: "+decl.initJava());
+      	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.initJava().getType(): "+decl.initJava().getType());
+     	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.name(): "+decl.name());
+     	
+      /*if (decl.initJava().toString().contains("opencl_gsize")){ //Added by Mohsen 
+    	    ASTNode tmp0 = create.expression(StandardOperator.RangeSeq,
+	                  create.constant(0),create.local_name("opencl_gsize"));
+    	    ASTNode tmp1 = create.expression(StandardOperator.Member, create.unresolved_name(decl.name()), tmp0);
+    	    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-if-1tmp: "+tmp1);
+    	    guard_list.add(tmp1);
+    	    tmp1=create.expression(StandardOperator.Size,tmp0);
+    	    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-if-2tmp: "+tmp1);
+    	    tmp1=create.expression(StandardOperator.GT,tmp1,create.constant(0));
+    	    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-if-3tmp: "+tmp1);
+    	    check_cb.requires(tmp1);
+    	    check_cb.ensures(tmp1);
+    	    guard_decls.add(create.field_decl(decl.name(), decl.getType()));
+    	    check_vars.remove(decl.name());
+    	  	//check_vars.put("opencl_gsize", create.primitive_type(PrimitiveSort.Integer));
+    	  	//main_vars.put("opencl_gsize", create.primitive_type(PrimitiveSort.Integer));
+    	  	//check_cb.given(create.field_decl("opencl_gsize",create.primitive_type(PrimitiveSort.Integer)));
+    	  	//main_cb.given(create.field_decl("opencl_gsize",create.primitive_type(PrimitiveSort.Integer)));
+    	  	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.annot: "+decl.initJava().annotations());
+      } else {*/
+     	
+     	
       ASTNode tmp = create.expression(StandardOperator.Member, create.unresolved_name(decl.name()), decl.initJava());
+      System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-else-1tmp: "+tmp);
       guard_list.add(tmp);
       tmp=create.expression(StandardOperator.Size,decl.initJava());
+      System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-else-2tmp: "+tmp);
       tmp=create.expression(StandardOperator.GT,tmp,create.constant(0));
+      System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-else-3tmp: "+tmp);
       check_cb.requires(tmp);
       check_cb.ensures(tmp);
       guard_decls.add(create.field_decl(decl.name(), decl.getType()));
+      System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.getType(): "+decl.getType());
+      System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-create.field_decl(decl.name(), decl.getType()): "+create.field_decl(decl.name(), decl.getType()));
       check_vars.remove(decl.name());
+      //}
+      /*if (decl.initJava().toString().contains("opencl_gsize")){ //Added by Mohsen 
+    	    ASTNode tmp1 = create.expression(StandardOperator.Member,
+    	              create.local_name("opencl_lid"),
+    	              create.expression(StandardOperator.RangeSeq,
+    	                  create.constant(0),create.unresolved_name("opencl_gsize")));
+    	  	check_vars.put("opencl_gsize", create.primitive_type(PrimitiveSort.Integer));
+    	  	//main_vars.put("opencl_gsize", create.primitive_type(PrimitiveSort.Integer));
+    	  	//check_cb.given(create.field_decl("opencl_gsize",create.primitive_type(PrimitiveSort.Integer)));
+    	  	System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-decl.annot: "+decl.initJava().annotations());
+      }*/
     }
     
     ASTNode iters_guard=create.fold(StandardOperator.And,guard_list);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-iters_guard: "+iters_guard);
     DeclarationStatement iters_decl[]=guard_decls.toArray(new DeclarationStatement[0]);
     for (ASTNode clause : ASTUtils.conjuncts(pb.contract().pre_condition, StandardOperator.Star)) {
       if (clause.getType().isBoolean()){
@@ -203,6 +255,14 @@ public class ParallelBlockEncoder extends AbstractRewriter {
         Abort("unexpected kind of invariant: %s",ib.getClass());
       }
     }
+    
+    //if (pb.label().equals("group_block")){ //Added by Mohsen 
+    	//	check_vars.put("opencl_gsize", create.primitive_type(PrimitiveSort.Integer));
+    	
+    //}
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-res: "+res);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-check_cb.getContract(): "+check_cb.getContract());
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-main_cb.getContract(): "+main_cb.getContract());
     currentTargetClass.add(create.method_decl(
         create.primitive_type(PrimitiveSort.Void),
         check_cb.getContract(),
@@ -210,6 +270,13 @@ public class ParallelBlockEncoder extends AbstractRewriter {
         gen_pars(check_vars),
         res
     ));
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-create.method-check: "+create.method_decl(
+            create.primitive_type(PrimitiveSort.Void),
+            check_cb.getContract(),
+            check_name,
+            gen_pars(check_vars),
+            res
+        ));
     currentTargetClass.add(create.method_decl(
         create.primitive_type(PrimitiveSort.Void),
         main_cb.getContract(),
@@ -217,11 +284,26 @@ public class ParallelBlockEncoder extends AbstractRewriter {
         gen_pars(main_vars),
         null
     ));
+    
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-create.method-main: "+create.method_decl(
+            create.primitive_type(PrimitiveSort.Void),
+            main_cb.getContract(),
+            main_name,
+            gen_pars(main_vars),
+            null
+        ));
+    
     result=gen_call(main_name,main_vars);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-main_name: "+main_name);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-main_vars: "+main_vars);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-check_name: "+check_name);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-check_vars: "+check_vars);
+    System.out.println("ParallelBlockEncoder-visit(ParallelBarrier pb)-end of method");
   }
 
   @Override
   public void visit(ParallelRegion region){
+	  System.out.println("ParallelBlockEncoder-visit(ParallelRegion region): "+ region);
     count++;
     String main_name = "parrallel_region_main_" + count;
     ContractBuilder main_cb=new ContractBuilder();
@@ -402,6 +484,7 @@ public class ParallelBlockEncoder extends AbstractRewriter {
         body
     ));
     result=gen_call(main_name,main_vars);
+    System.out.println("ParallelBlockEncoder-visit(ParallelRegion region)-blocks: "+blocks); 
   }
   
   private void gen_consistent(ParallelRegion region, ParallelBlock pb1, ParallelBlock pb2, boolean guard) {

@@ -299,7 +299,8 @@ public enum StandardOperator {
   /**
    * compare matrices pointwise
    */
-  MatrixCompare(2)
+  MatrixCompare(2),
+  
   ;
 
   private final int arity;

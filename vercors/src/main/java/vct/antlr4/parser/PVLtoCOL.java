@@ -649,10 +649,18 @@ public class PVLtoCOL extends ANTLRtoCOL implements PVFullVisitor<ASTNode> {
       if (match(offset,false,ctx,null,null)){
         c=(Contract)convert(ctx,offset);
         body=(BlockStatement)convert(ctx,offset+1);
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-first barrier-name: "+name); // 
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-first barrier-contract: "+c);		//
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-first barrier-invs: "+invs);		//
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-first barrier-body: "+body);	//
         return create.barrier(name,c,invs,body);
       }
       if (match(offset,false,ctx,"{",null,"}")){
         c=(Contract)convert(ctx,offset+1);
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-second barrier-name: "+name);	//
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-second barrier-contract: "+c);	//
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-second barrier-invs: "+invs);	//
+        System.out.println("PVLtoCOL-visitStatement(statementContext)-second barrier-body: "+body);	//
         return create.barrier(name,c,invs,body);
       }
     }

@@ -174,7 +174,7 @@ public class AbstractTypeCheck extends RecursiveVisitor<Type> {
           }
           return;
         }
-        */
+        */  
         String tmp="";
         if (N>0){
           tmp=type[0].toString();
@@ -617,7 +617,13 @@ public class AbstractTypeCheck extends RecursiveVisitor<Type> {
           case "tid":
           case "gid":
           case "lid":
-            e.setType(new PrimitiveType(PrimitiveSort.Integer));
+          //case "opencl_gsize": //Added by Mohsen
+          case "threadIdx": // Added by Mohsen
+          case "x":       // Added by Mohsen
+          case "blockIdx": // Added by Mohsen
+          case "blockDim": // Added by Mohsen
+          //case "length": // Added by Mohsen
+            e.setType(new PrimitiveType(PrimitiveSort.Integer)); 
             break;
           default:
             for(String n:this.variables.keySet()){
@@ -1287,6 +1293,54 @@ public class AbstractTypeCheck extends RecursiveVisitor<Type> {
       e.setType(new PrimitiveType(PrimitiveSort.Integer));      
       break;
     }
+    case StructSelect: // Added by Mohsen
+    {
+    	  Type t=e.arg(0).getType();
+    	  if (t==null) Fail("type of argument is unknown at %s",e.getOrigin());
+    	  if(e.arg(0).isName("threadIdx") || e.arg(0).isName("blockIdx") || e.arg(0).isName("blockDim")) {
+    		  if(e.arg(1).isName("x"))
+    			  e.setType(new PrimitiveType(PrimitiveSort.Integer));
+    	  }
+    	  break;
+    }
+   /*  case StructSelect: // Added by Mohsen
+    {
+    		System.out.println("Safari");
+        //Type t=e.arg(0).getType();
+        System.out.println("e: "+e);
+        System.out.println("e.arg(0): "+e.arg(0));
+        System.out.println("e.arg(1): "+e.arg(1));
+        System.out.println("e.arg(0).getType(): "+e.arg(0).getType());
+        System.out.println("e.arg(1).getType(): "+e.arg(1).getType());
+        //if (t==null) Fail("type of argument is unknown at %s",e.getOrigin());
+        //if (!t.isPrimitive(PrimitiveSort.Array)) Fail("argument of length is not an array");
+        
+        System.out.println("after if");
+      
+        //if(t instanceof PrimitiveType) {
+        	//	if (e.arg(1).isName("length")) {
+        	//		//if (!t.isPrimitive(PrimitiveSort.Array)) Fail("argument of length is not an array");
+        	//		System.out.println("Mohsen");
+        	//		e.setType(new PrimitiveType(PrimitiveSort.Integer));      	
+        	//	}
+        	//}
+    	
+    	
+    		Type struct_type=e.arg(0).getType();
+        if (struct_type==null) Fail("type of struct unknown at "+e.getOrigin());
+        if (struct_type.isPrimitive(PrimitiveSort.Location)){
+        	struct_type=(Type)struct_type.firstarg();
+        	System.out.println("here");
+        }
+        //if (struct_type instanceof PrimitiveType){
+          if (e.arg(1).isName("length")){
+            e.setType(new PrimitiveType(PrimitiveSort.Integer));
+            System.out.println("inside after if");
+          }
+        //}
+        break;
+    } // case StructSelect added by Mohsen */
+    
     case Append:
     {
       if (!t1.isPrimitive(PrimitiveSort.Sequence)) Fail("argument of size is not a sequence");

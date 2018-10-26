@@ -29,7 +29,7 @@ public class ColIParser implements vct.col.util.Parser {
 
   protected ProgramUnit parse(String file_name,InputStream stream) throws IOException{
     TimeKeeper tk=new TimeKeeper();
-
+    
     ANTLRInputStream input = new ANTLRInputStream(stream);
     CMLLexer lexer = new CMLLexer(input);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -37,20 +37,21 @@ public class ColIParser implements vct.col.util.Parser {
     CMLParser parser = new CMLParser(tokens);
     parser.removeErrorListeners();
     parser.addErrorListener(ec);
+    
     ParseTree tree = parser.compilationUnit();
     Progress("first parsing pass took %dms",tk.show());
-    ec.report();
+    ec.report(); 
     Debug("parser got: %s",tree.toStringTree(parser));
-
+     
     ProgramUnit pu=CMLtoCOL.convert_pu(tree,file_name,tokens,parser);
     Progress("AST conversion took %dms",tk.show());
-    Debug("after conversion %s",pu);
+    Debug("after conversion %s",pu); 
     
     pu=new CommentRewriter(pu,new CMLCommentParser(ec)).rewriteAll();
     Progress("Specification parsing took %dms",tk.show());
     ec.report();
     Debug("after comment processing %s",pu);
-
+    
     pu=new FlattenVariableDeclarations(pu).rewriteAll();
     Progress("Flattening variables took %dms",tk.show());
     Debug("after flattening variable decls %s",pu);
@@ -58,15 +59,15 @@ public class ColIParser implements vct.col.util.Parser {
     pu=new SpecificationCollector(CSyntax.getCML(),pu).rewriteAll();
     Progress("Shuffling specifications took %dms",tk.show());    
     Debug("after collecting specifications %s",pu);
-
+    
     pu=new ConvertTypeExpressions(pu).rewriteAll();
     Progress("converting type expressions took %dms",tk.show());
     Debug("after converting type expression %s",pu);
-        
+       
     pu=new VerCorsDesugar(pu).rewriteAll();
     Progress("Desugaring took %dms",tk.show());
     Debug("after desugaring",pu);
-
+    
     // TODO: encoding as class should not be necessary. 
     pu=new EncodeAsClass(pu).rewriteAll();
     Progress("Encoding as class took %dms",tk.show());

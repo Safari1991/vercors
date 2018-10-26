@@ -374,7 +374,7 @@ public class ANTLRtoCOL implements ParseTreeVisitor<ASTNode> {
     } else {
       unit.add(res);
     }
-  }
+  } 
   
   public ASTNode comment(Token tk){
     create.enter();
@@ -386,7 +386,7 @@ public class ANTLRtoCOL implements ParseTreeVisitor<ASTNode> {
   }
   
   public ASTNode convert(ParseTree arg0){
-    enter(arg0);
+    enter(arg0); 
     ASTNode res=arg0.accept(this);
     if (res==null){
       res=visit(arg0);

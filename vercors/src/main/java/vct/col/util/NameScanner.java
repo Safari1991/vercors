@@ -28,6 +28,7 @@ public class NameScanner extends RecursiveVisitor<Object> {
   }
   
   public void visit(NameExpression e){
+	  System.out.println("NameScanner-visit(NameExpression e)-e: "+e+" e.getKind: "+e.getKind()+ " e.getType: "+e.getType());
     switch(e.getKind()){
       case Reserved: return;
       case Label: return;
@@ -48,6 +49,29 @@ public class NameScanner extends RecursiveVisitor<Object> {
           t.accept(this);
         }
         return;
+        
+      /*case Unresolved:{ // Added by Mohsen
+  	  	name=e.getName();
+  	  	switch(name){
+  	  		case "threadIdx":
+  	  			vars.put(name,e.getType());
+  	  			e.getType().accept(this);
+  	  			System.out.println("NameScanner");
+  	  	}
+  	  	return;	
+    }*/
+        
+      case Unresolved:{ // Added by Mohsen
+    	  	name=e.getName();
+    	  	switch(name){
+    	  		case "length":
+    	  			vars.put(name,e.getType());
+    	  			e.getType().accept(this);
+    	  			System.out.println("NameScanner");
+    	  	}
+    	  	return;	
+      }// case Unresolved added by Mohsen
+          
       default:
         Abort("missing case %s %s in name scanner",e.getKind(),e.getName());
     }

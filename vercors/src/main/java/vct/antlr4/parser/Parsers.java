@@ -18,7 +18,8 @@ public class Parsers {
     switch(extension){
     case "cl":
     case "c":
-      return new ColCParser();
+    case "cu": // Added by Mohsen
+      return new ColCParser(); 
     case "i":return new ColIParser();
     case "java7":return new ColJavaParser(7,true);
     case "java8":return new ColJavaParser(8,true);

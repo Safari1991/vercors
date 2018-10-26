@@ -1,6 +1,8 @@
 package vct.antlr4.parser;
 
 
+import java.util.ArrayList;
+
 import vct.col.ast.*;
 import vct.col.ast.ASTSpecial.Kind;
 import vct.col.rewrite.AbstractRewriter;
@@ -31,7 +33,7 @@ public class SpecificationCollector extends AbstractRewriter {
     switch(s.kind){
     case Given:
     case Yields:
-    case Requires:
+    case Requires: 
     case Ensures:
     case RequiresAndEnsures:
     case Invariant:
@@ -99,7 +101,6 @@ public class SpecificationCollector extends AbstractRewriter {
 
   @Override
   public void visit(ASTClass c){
-
     String name=c.getName();
     if (name==null) {
       Abort("illegal class without name");
@@ -132,7 +133,7 @@ public class SpecificationCollector extends AbstractRewriter {
 
   @Override
   public void visit(Method m){
-    super.visit(m);
+    super.visit(m); 
     currentContractBuilder=new ContractBuilder();
   }
   @Override
@@ -228,7 +229,7 @@ public class SpecificationCollector extends AbstractRewriter {
           }
           break;
         }
-        if (j<N && block.get(j) instanceof LoopStatement) {
+        if (j<N && (block.get(j) instanceof LoopStatement || block.get(j).toString().equals("barrier()") || block.get(j).toString().equals("__syncthreads()"))) { // Added by Mohsen
           currentContractBuilder=new ContractBuilder();
         } else {
           j--;
@@ -254,11 +255,26 @@ public class SpecificationCollector extends AbstractRewriter {
   @Override
   public void visit(MethodInvokation m){
     StandardOperator op=syntax.parseFunction(m.method);
-    if (op!=null && op.arity()==m.getArity()){
+    if((m.method.equals("barrier") || m.method.equals("__syncthreads"))&& currentContractBuilder!=null){ 
+    	  Contract c=currentContractBuilder.getContract();
+      System.out.println("SpecificationCollector-visit(MethodInvokation)-barrier-currentContractBuilder.getContract(): "+c);
+      if(c!=null) {
+    	  	System.out.println("SpecificationCollector-visit(MethodInvokation)-barrier-inside if");
+    	  	rewrite(c,currentContractBuilder);
+      }
+	  currentContractBuilder=null; 
+	  ArrayList<String> invs=new ArrayList<String>();
+	  //super.visit(m);
+	  //String array[] = {""};
+	  //m.setDefinition(new Method(Method.Kind.Pure, "barrier",array , false, ));
+	  result=create.barrier("group_block",c,invs,null);
+	  System.out.println("SpecificationCollector-visit(MethodInvokation)-barrier-result: ");
+    	}else
+    	if (op!=null && op.arity()==m.getArity()){
       result=create.expression(op,rewrite(m.getArgs()));
     } else {
       super.visit(m);
-    }
+    } 
   }
   
   @Override

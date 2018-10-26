@@ -109,7 +109,7 @@ public class CommentRewriter extends AbstractRewriter {
     result=c;
   }
   @Override
-  public void visit(Method m){
+  public void visit(Method m){  
     if (contract!=null){
       if (m.getContract()!=null){
         throw Failure("refusing to erase existing contract");

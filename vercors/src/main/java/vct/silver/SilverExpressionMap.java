@@ -93,6 +93,7 @@ public class SilverExpressionMap<T,E> implements ASTMapping<E>{
     case Old: return create.old(o,e1);
     
     case Size: return create.size(o,e1);
+    
     case Tail: return create.drop(o,e1,create.Constant(o,1));
     case Drop: return create.drop(o,e1,e2);
     case Take: return create.take(o,e1,e2);
@@ -152,6 +153,8 @@ public class SilverExpressionMap<T,E> implements ASTMapping<E>{
     }
     case Append:
       return create.append(o, e1,e2);
+    /*case StructSelect: // Added by Mohsen
+    		return create.append(o, e1, e2);*/
     default:
         throw new HREError("cannot map operator %s", e.operator());
     }

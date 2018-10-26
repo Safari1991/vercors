@@ -87,6 +87,7 @@ public class CSyntax extends Syntax{
     syntax.addPrimitiveType(PrimitiveSort.Float,"float");
     
     syntax.addReserved(ASTReserved.Null, "NULL");
+    syntax.addReserved(ASTReserved.Null, "null"); // Added by Mohsen
     
   }
 

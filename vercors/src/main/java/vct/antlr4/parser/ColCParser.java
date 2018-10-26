@@ -63,7 +63,7 @@ public class ColCParser extends ColIParser {
       } catch (Exception e) {
         e.printStackTrace();
         Abort("Exception %s while parsing %s",e.getClass(),file_name);
-      }
+      }  
     return null;
   }
 

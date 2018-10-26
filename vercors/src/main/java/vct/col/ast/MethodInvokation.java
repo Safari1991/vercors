@@ -106,7 +106,7 @@ public class MethodInvokation extends ExpressionNode {
       Abort("invokation of unknown method");
     }
     return definition.kind==Method.Kind.Constructor;
-  }
+  } 
 
 }
 

@@ -569,6 +569,8 @@ case class SeqAppend(left: Exp, right: Exp)(val pos: Position = NoPosition, val 
 
 /** Access to an element of a sequence at a given index position (starting at 0). */
 case class SeqIndex(s: Exp, idx: Exp)(val pos: Position = NoPosition, val info: Info = NoInfo) extends SeqExp {
+  System.out.println("Expression.scala-s: "+s);
+  System.out.println("Expression.scala-s.typ: "+s.typ);
   require(s.typ.isInstanceOf[SeqType])
   require(idx isSubtype Int)
   lazy val typ = s.typ.asInstanceOf[SeqType].elementType

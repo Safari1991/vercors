@@ -119,6 +119,7 @@ public abstract class ASTNode implements ASTFlags {
   }
   
   public void setOrigin(Origin origin){
+	  //System.out.println("ASTNode-setOrigin(Origin)-this.origin: "+ this.origin+" origin: "+origin);
     if (this.origin!=null) throw new Error("origin already set");
     if (origin==null) {
       this.origin=new MessageOrigin("NULL ORIGIN");

@@ -13,5 +13,5 @@ public enum TypeOperator {
   Static,
   PointerTo,
   Extends,
-  Super
+  Super,
 }
